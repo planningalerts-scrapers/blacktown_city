@@ -1,3 +1,4 @@
+require 'scraperwiki'
 require 'mechanize'
 
 # date_range can be either :this_week or :last_week
@@ -57,7 +58,7 @@ def applications_search(date_range)
         record["date_received"] = Date.parse(date_received).to_s
       end
 
-      if ScraperWiki.select("* from swdata where `council_reference`='#{record['council_reference']}'").empty? 
+      if ScraperWiki.select("* from data where `council_reference`='#{record['council_reference']}'").empty? 
         ScraperWiki.save_sqlite(['council_reference'], record)
       else
         puts "Skipping already saved record " + record['council_reference']
