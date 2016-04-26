@@ -1,8 +1,8 @@
 require 'scraperwiki'
 require 'mechanize'
 
-    info_url = "http://apps.blacktown.nsw.gov.au/devonline/"
-    comment_url = "http://apps.blacktown.nsw.gov.au/devonline/"
+    info_url = "http://www.blacktown.nsw.gov.au/Planning_and_Development/Development_Assessment/Development_Online/Developments_on_Notification"
+    comment_url = "mailto:council@blacktown.nsw.gov.au"
 
     agent = Mechanize.new
     page = agent.get("http://www.blacktown.nsw.gov.au/Planning_and_Development/Development_Assessment/Development_Online/Developments_on_Notification")
