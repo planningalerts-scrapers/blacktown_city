@@ -1,38 +1,33 @@
 require 'scraperwiki'
 require 'mechanize'
 
-info_url = "http://www.blacktown.nsw.gov.au/Planning_and_Development/Development_Assessment/Development_Online/Developments_on_Notification"
+info_url = "https://www.blacktown.nsw.gov.au/Plan-build/Stage-1-find-out/Development-on-notification"
+url = "https://services.blacktown.nsw.gov.au/webservices/scm/default.ashx?itemid=890&stylesheet=xslt/DAOnline.xslt"
 comment_url = "mailto:council@blacktown.nsw.gov.au"
 
 agent = Mechanize.new
-page = agent.get("http://www.blacktown.nsw.gov.au/Planning_and_Development/Development_Assessment/Development_Online/Developments_on_Notification")
+page = agent.get(url)
 
-page.search(".body-content table").map do |app|
-  record = {}
+xml = Nokogiri::XML(page.body)
+xml.xpath('//DevelopmentsOnNotifications/DevelopmentsOnNotification').each do |app|
+    description = app.xpath('Notes').inner_text.size > app.xpath('Activity').inner_text.size ? app.xpath('Notes').inner_text : app.xpath('Activity').inner_text
 
-  app.search("tr").each do |row|
-    if row.inner_text.index('Application: ')
-      text = row.inner_text.strip.split('Application: ')[1]
-      record.merge!('council_reference' => text.split(',')[0], 'address' => text.split('[+]')[1])
-    end
-
-    if row.inner_text.index('Activity: ')
-      record.merge!('description' => row.inner_text.strip.split('Activity: ')[1])
-    end
-
-    if row.inner_text.index('Lodgement Date: ')
-      record.merge!('date_received' => Date.parse(row.inner_text.strip.split('Lodgement Date: ')[1], '%Y-%m-%d').to_s)
-    end
-  end
-
-  record.merge!('date_scraped' => Date.today.to_s,
-                'info_url' => info_url,
-                'comment_url' => comment_url)
+    record = {
+      "council_reference" => app.xpath('ApplicationID').inner_text,
+      "address" => app.xpath('PrimaryAddress').inner_text,
+      "description" => description.gsub(/\s+/, ' '),
+      "info_url"    => info_url,
+      "communt_url" => comment_url,
+      "date_scraped" => Date.today.to_s,
+      "date_received" => DateTime.parse(app.xpath('LodgementDate').inner_text).to_date.to_s
+    }
 
   if (ScraperWiki.select("* from data where `council_reference`='#{record['council_reference']}'").empty? rescue true)
-    ScraperWiki.save_sqlite(['council_reference'], record)
     puts "Saved record " + record['council_reference']
+#     puts record
+    ScraperWiki.save_sqlite(['council_reference'], record)
   else
     puts "Skipping already saved record " + record['council_reference']
   end
+
 end
