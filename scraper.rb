@@ -22,12 +22,7 @@ xml.xpath('//DevelopmentsOnNotifications/DevelopmentsOnNotification').each do |a
       "date_received" => DateTime.parse(app.xpath('LodgementDate').inner_text).to_date.to_s
     }
 
-  if (ScraperWiki.select("* from data where `council_reference`='#{record['council_reference']}'").empty? rescue true)
     puts "Saved record " + record['council_reference']
-#     puts record
     ScraperWiki.save_sqlite(['council_reference'], record)
-  else
-    puts "Skipping already saved record " + record['council_reference']
-  end
 
 end
